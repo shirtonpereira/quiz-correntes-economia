@@ -4,32 +4,22 @@ import random
 import pandas as pd
 import plotly.express as px
 
-# ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
-st.set_page_config(
-    page_title="Quiz: Escolas Econômicas",
-    page_icon="📊",
-    layout="centered"
-)
+# Configuração da página
+st.set_page_config(page_title="Quiz: Escola Econômica", layout="centered")
 
-# ---------------- TÍTULO PRINCIPAL ----------------
-st.markdown(
-    "<h1 style='text-align: center; color: #4CAF50;'>📊 Quiz: Identificação de Escola Econômica</h1>",
-    unsafe_allow_html=True
-)
-st.markdown(
-    "<p style='text-align: center;'>Responda às perguntas e descubra com qual escola econômica você mais se identifica!</p>",
-    unsafe_allow_html=True
-)
-
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("ℹ️ Sobre o Quiz")
-st.sidebar.write(
+# Sidebar
+st.sidebar.title("📘 Sobre o Quiz")
+st.sidebar.info(
     "Quiz para explorar diferentes correntes do pensamento econômico. "
-    "As alternativas foram formuladas para mapear sua afinidade."
+    "As alternativas foram formuladas para mapear sua afinidade.\n\n"
+    "Feito com ❤️ usando Streamlit."
 )
-st.sidebar.write("Feito com ❤️ usando Streamlit")
 
-# ---------------- PERGUNTAS ----------------
+# Título
+st.title("🎓 Quiz: Identificação de Escola Econômica")
+st.markdown("Responda às perguntas abaixo e descubra com qual escola você mais se identifica.")
+
+# Perguntas e alternativas
 perguntas = [
     {
         "texto": "1. Por que o desemprego persiste mesmo em economias que estão crescendo?",
@@ -121,75 +111,53 @@ perguntas = [
     }
 ]
 
-# ---------------- PONTUAÇÕES / ESTADO ----------------
-pontuacoes = {
-    "Novo-keynesiana": 0,
-    "Pós-keynesiana": 0,
-    "Neoclássica": 0,
-    "Marxista": 0,
-    "Austríaca": 0,
-    "Monetarista": 0
-}
+# Inicializa pontuações
+pontuacoes = {escola: 0 for escola in ["Novo-keynesiana", "Pós-keynesiana", "Neoclássica", "Marxista", "Austríaca", "Monetarista"]}
 respostas = []
 
-# ---------------- FORMULÁRIO DO QUIZ ----------------
+# Formulário
 with st.form("quiz_form"):
     for i, pergunta in enumerate(perguntas):
-        # copia para não alterar a lista original
-        opcoes_copia = pergunta["opcoes"].copy()
-        random.shuffle(opcoes_copia)
-        labels = [txt for (txt, escola) in opcoes_copia]
-
-        escolha = st.radio(
-            label=pergunta["texto"],
-            options=labels,
-            key=f"pergunta_{i}"
+        # Perguntas em destaque (maiores)
+        st.markdown(
+            f"<h3 style='font-size:22px; margin-top:25px; color:#2C3E50;'>{pergunta['texto']}</h3>",
+            unsafe_allow_html=True
         )
+        opcoes = pergunta["opcoes"][:]
+        random.shuffle(opcoes)
+        escolha = st.radio("", [opcao[0] for opcao in opcoes], key=f"pergunta_{i}")
+        respostas.append((escolha, opcoes))
+    submitted = st.form_submit_button("📊 Ver Resultado")
 
-        # mapeia texto -> escola para pontuação depois
-        respostas.append((escolha, dict(opcoes_copia)))
-
-    submitted = st.form_submit_button("✅ Ver Resultado")
-
-# ---------------- RESULTADO ----------------
+# Resultado
 if submitted:
-    for escolha_txt, mapa_texto_escola in respostas:
-        escola_escolhida = mapa_texto_escola.get(escolha_txt)
-        if escola_escolhida in pontuacoes:
-            pontuacoes[escola_escolhida] += 1
+    for resposta_texto, opcoes in respostas:
+        for texto, escola in opcoes:
+            if texto == resposta_texto:
+                pontuacoes[escola] += 1
 
-    # escola principal
     escola_principal = max(pontuacoes, key=pontuacoes.get)
 
     descricoes = {
-        "Novo-keynesiana": "Combina ideias keynesianas com microfundamentos. Aceita falhas de mercado e defende intervenções seletivas do Estado.",
-        "Pós-keynesiana": "Ênfase na incerteza, instabilidade financeira e papel da demanda agregada. Defende forte intervenção estatal.",
-        "Neoclássica": "Baseada na racionalidade dos agentes e equilíbrio geral. Acredita na eficiência dos mercados e critica intervenção estatal.",
-        "Marxista": "Analisa a economia pela luta de classes e exploração do trabalho. Crítica estrutural ao capitalismo e defesa de sua superação.",
-        "Austríaca": "Foco no individualismo metodológico e ordem espontânea. Rejeita intervenção estatal e modelos matemáticos complexos.",
-        "Monetarista": "Destaca o papel da oferta monetária. Defende regras monetárias estáveis e controle rígido da inflação."
+        "Novo-keynesiana": "Combina ideias keynesianas com microfundamentos. Defende intervenções seletivas do Estado. Autores: Stiglitz, Mankiw, Krugman.",
+        "Pós-keynesiana": "Ênfase na incerteza fundamental, instabilidade financeira endógena e papel da demanda agregada. Autores: Keynes, Kalecki, Minsky.",
+        "Neoclássica": "Baseada na racionalidade dos agentes e equilíbrio geral. Autores: Walras, Marshall, Friedman.",
+        "Marxista": "Analisa a economia através da luta de classes e exploração do trabalho. Autores: Marx, Engels, Luxemburgo.",
+        "Austríaca": "Ênfase no empreendedorismo, ordem espontânea e rejeição à intervenção estatal. Autores: Mises, Hayek, Kirzner.",
+        "Monetarista": "Destaca o papel da oferta monetária. 'Inflação é sempre e em todo lugar um fenômeno monetário'. Autores: Friedman, Schwartz, Brunner."
     }
 
-    st.success(f"🎉 Você se identifica mais com a **{escola_principal}**!")
+    st.success(f"🏆 Você se identifica com: **{escola_principal}**")
     st.info(descricoes[escola_principal])
 
-    # dataframe e gráfico
-    df_resultado = pd.DataFrame.from_dict(pontuacoes, orient='index', columns=['Pontuação'])
-    df_resultado = df_resultado.sort_values('Pontuação', ascending=False)
-
-    fig = px.bar(
-        df_resultado,
-        x=df_resultado.index,
-        y="Pontuação",
-        text="Pontuação",
-        title="Resultado por Escola Econômica"
-    )
+    # Gráfico
+    df_resultado = pd.DataFrame.from_dict(pontuacoes, orient='index', columns=['Pontuação']).sort_values('Pontuação', ascending=True)
+    fig = px.bar(df_resultado, x=df_resultado.index, y='Pontuação',
+                 title="Resultado por Escola Econômica",
+                 labels={'index': 'Escola Econômica', 'Pontuação': 'Pontuação'},
+                 color='Pontuação', text='Pontuação')
     fig.update_traces(textposition='outside')
-    fig.update_layout(xaxis_title="", yaxis_title="Pontuação", uniformtext_minsize=12, uniformtext_mode='hide')
     st.plotly_chart(fig, use_container_width=True)
 
-    # botão para refazer
-    if st.button("🔄 Refazer Quiz"):
-        st.rerun()
 
 
