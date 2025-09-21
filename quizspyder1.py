@@ -4,22 +4,32 @@ import random
 import pandas as pd
 import plotly.express as px
 
-# Configuração da página
-st.set_page_config(page_title="Quiz: Escola Econômica", layout="centered")
+# ---------------- CONFIGURAÇÃO DA PÁGINA ----------------
+st.set_page_config(
+    page_title="Quiz: Escolas Econômicas",
+    page_icon="📊",
+    layout="centered"
+)
 
-# Sidebar
-st.sidebar.title("📘 Sobre o Quiz")
+# ---------------- TÍTULO PRINCIPAL ----------------
+st.markdown(
+    "<h1 style='text-align: center; color: #4CAF50;'>📊 Quiz: Identificação de Escola Econômica</h1>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<p style='text-align: center;'>Para estudantes de economia. Responda às perguntas abaixo e descubra com qual escola você mais se identifica!</p>",
+    unsafe_allow_html=True
+)
+
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("ℹ️ Sobre o Quiz")
 st.sidebar.info(
     "Quiz para explorar diferentes correntes do pensamento econômico. "
     "As alternativas foram formuladas para mapear sua afinidade.\n\n"
     "Feito com ❤️ usando Streamlit."
 )
 
-# Título
-st.title("🎓 Quiz: Identificação de Escola Econômica")
-st.markdown("Responda às perguntas abaixo e descubra com qual escola você mais se identifica.")
-
-# Perguntas e alternativas
+# ---------------- PERGUNTAS E ALTERNATIVAS ----------------
 perguntas = [
     {
         "texto": "1. Por que o desemprego persiste mesmo em economias que estão crescendo?",
@@ -111,53 +121,102 @@ perguntas = [
     }
 ]
 
-# Inicializa pontuações
-pontuacoes = {escola: 0 for escola in ["Novo-keynesiana", "Pós-keynesiana", "Neoclássica", "Marxista", "Austríaca", "Monetarista"]}
-respostas = []
+# ---------------- PONTUAÇÕES / ESTADO ----------------
+# Inicializa o estado da sessão para armazenar as respostas
+if 'respostas_do_quiz' not in st.session_state:
+    st.session_state.respostas_do_quiz = {}
+if 'opcoes_embaralhadas' not in st.session_state:
+    st.session_state.opcoes_embaralhadas = {}
 
-# Formulário
+# ---------------- FORMULÁRIO DO QUIZ ----------------
 with st.form("quiz_form"):
     for i, pergunta in enumerate(perguntas):
-        # Perguntas em destaque (maiores)
         st.markdown(
             f"<h3 style='font-size:22px; margin-top:25px; color:#2C3E50;'>{pergunta['texto']}</h3>",
             unsafe_allow_html=True
         )
-        opcoes = pergunta["opcoes"][:]
-        random.shuffle(opcoes)
-        escolha = st.radio("", [opcao[0] for opcao in opcoes], key=f"pergunta_{i}")
-        respostas.append((escolha, opcoes))
-    submitted = st.form_submit_button("📊 Ver Resultado")
+        
+        # Embaralha as opções apenas uma vez e armazena no estado da sessão
+        if f"pergunta_{i}" not in st.session_state.opcoes_embaralhadas:
+            opcoes_embaralhadas = pergunta["opcoes"][:]
+            random.shuffle(opcoes_embaralhadas)
+            st.session_state.opcoes_embaralhadas[f"pergunta_{i}"] = opcoes_embaralhadas
 
-# Resultado
+        opcoes_exibidas = st.session_state.opcoes_embaralhadas[f"pergunta_{i}"]
+        
+        # Cria o radio button para a pergunta
+        resposta_escolhida = st.radio(
+            "", 
+            [opcao[0] for opcao in opcoes_exibidas], 
+            key=f"resposta_pergunta_{i}"
+        )
+        # Armazena a resposta no estado da sessão
+        st.session_state.respostas_do_quiz[f"pergunta_{i}"] = resposta_escolhida
+        
+    submitted = st.form_submit_button("✅ Ver Resultado")
+
+# ---------------- RESULTADO ----------------
 if submitted:
-    for resposta_texto, opcoes in respostas:
-        for texto, escola in opcoes:
-            if texto == resposta_texto:
+    # Reinicializa as pontuações
+    pontuacoes = {
+        "Novo-keynesiana": 0,
+        "Pós-keynesiana": 0,
+        "Neoclássica": 0,
+        "Marxista": 0,
+        "Austríaca": 0,
+        "Monetarista": 0
+    }
+    
+    # Processa as respostas para pontuar
+    for i, pergunta in enumerate(perguntas):
+        opcoes_originais = st.session_state.opcoes_embaralhadas[f"pergunta_{i}"]
+        resposta_escolhida_texto = st.session_state.respostas_do_quiz[f"pergunta_{i}"]
+        
+        for texto, escola in opcoes_originais:
+            if texto == resposta_escolhida_texto:
                 pontuacoes[escola] += 1
+                break
 
+    # Encontra a escola principal
     escola_principal = max(pontuacoes, key=pontuacoes.get)
-
+    
     descricoes = {
-        "Novo-keynesiana": "Combina ideias keynesianas com microfundamentos. Defende intervenções seletivas do Estado. Autores: Stiglitz, Mankiw, Krugman.",
-        "Pós-keynesiana": "Ênfase na incerteza fundamental, instabilidade financeira endógena e papel da demanda agregada. Autores: Keynes, Kalecki, Minsky.",
-        "Neoclássica": "Baseada na racionalidade dos agentes e equilíbrio geral. Autores: Walras, Marshall, Friedman.",
-        "Marxista": "Analisa a economia através da luta de classes e exploração do trabalho. Autores: Marx, Engels, Luxemburgo.",
-        "Austríaca": "Ênfase no empreendedorismo, ordem espontânea e rejeição à intervenção estatal. Autores: Mises, Hayek, Kirzner.",
-        "Monetarista": "Destaca o papel da oferta monetária. 'Inflação é sempre e em todo lugar um fenômeno monetário'. Autores: Friedman, Schwartz, Brunner."
+        "Novo-keynesiana": "Combina ideias keynesianas com microfundamentos. Aceita que mercados podem falhar e defende intervenções seletivas do Estado para corrigir falhas e estabilizar a economia. Autores: Stiglitz, Mankiw, Krugman.",
+        "Pós-keynesiana": "Ênfase na incerteza fundamental, instabilidade financeira endógena e papel da demanda agregada. Crítica a visão de equilíbrio geral neoclássica. Defende forte intervenção estatal e controle de capitais. Autores: Keynes, Kalecki, Minsky.",
+        "Neoclássica": "Baseada na racionalidade dos agentes e equilíbrio geral. Acredita na eficiência dos mercados e que intervenções estatais geram distorções. Foco em modelos matemáticos e otimização. Autores: Walras, Marshall, Friedman.",
+        "Marxista": "Analisa a economia através da luta de classes e exploração do trabalho. Crítica estrutural ao capitalismo como sistema intrinsecamente instável e injusto. Defende a superação do capitalismo. Autores: Marx, Engels, Luxemburgo.",
+        "Austríaca": "Foca no individualismo metodológico, processos de mercado e conhecimento disperso. Rejeita qualquer intervenção estatal. Ênfase no empreendedorismo e ordem espontânea. Autores: Mises, Hayek, Kirzner.",
+        "Monetarista": "Destaca o papel da oferta monetária na economia. Defende regras monetárias estáveis em vez de políticas discricionárias. 'Inflação é sempre e em todo lugar um fenômeno monetário'. Autores: Friedman, Schwartz, Brunner."
     }
 
-    st.success(f"🏆 Você se identifica com: **{escola_principal}**")
+    st.success(f"🎉 Você se identifica mais com a **{escola_principal}**!")
     st.info(descricoes[escola_principal])
+    
+    # Cria o dataframe e o gráfico com Plotly
+    df_resultado = pd.DataFrame.from_dict(pontuacoes, orient='index', columns=['Pontuação']).sort_values('Pontuação', ascending=False)
 
-    # Gráfico
-    df_resultado = pd.DataFrame.from_dict(pontuacoes, orient='index', columns=['Pontuação']).sort_values('Pontuação', ascending=True)
-    fig = px.bar(df_resultado, x=df_resultado.index, y='Pontuação',
-                 title="Resultado por Escola Econômica",
-                 labels={'index': 'Escola Econômica', 'Pontuação': 'Pontuação'},
-                 color='Pontuação', text='Pontuação')
+    fig = px.bar(
+        df_resultado,
+        x=df_resultado.index,
+        y="Pontuação",
+        text="Pontuação",
+        title="Resultado por Escola Econômica",
+        labels={'index': 'Escola Econômica', 'Pontuação': 'Pontuação'},
+        color_discrete_sequence=['#4CAF50']
+    )
     fig.update_traces(textposition='outside')
+    fig.update_layout(xaxis_title="", yaxis_title="Pontuação", uniformtext_minsize=12, uniformtext_mode='hide')
     st.plotly_chart(fig, use_container_width=True)
+
+    # Botão para refazer o quiz
+    if st.button("🔄 Refazer Quiz"):
+        # Limpa o estado da sessão para reiniciar o quiz
+        for key in ["respostas_do_quiz", "opcoes_embaralhadas"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
+
+
 
 
 
