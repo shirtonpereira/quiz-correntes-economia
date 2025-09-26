@@ -120,7 +120,18 @@ perguntas = [
         ]
     },
     {
-        "texto": "9. Qual o papel ideal do governo na economia?",
+        "texto": "9. Qual a visão sobre o desenvolvimento industrial de um país?",
+        "opcoes": [
+            ("Deve ser impulsionado por meio da política fiscal e investimentos públicos em setores estratégicos para garantir a soberania.", "Pós-keynesiana"),
+            ("O crescimento da indústria é um processo espontâneo do mercado, que se baseia na inovação e na acumulação de capital privada.", "Austríaca"),
+            ("O papel do governo é limitado a criar um ambiente de baixa inflação, permitindo que o investimento privado em fábricas e tecnologias flua naturalmente.", "Monetarista"),
+            ("O desenvolvimento industrial ocorre quando as instituições certas (leis, bancos, educação) estão em vigor para reduzir incertezas e custos de transação.", "Institucionalista"),
+            ("O governo deve intervir com incentivos fiscais e subsídios direcionados para corrigir falhas de mercado e apoiar indústrias nascentes.", "Novo-keynesiana"),
+            ("A indústria deve se desenvolver com base nas vantagens comparativas de cada país, impulsionada pelo livre comércio e pela eficiência de mercado.", "Neoclássica")
+        ]
+    },
+    {
+        "texto": "10. Qual o papel ideal do governo na economia?",
         "opcoes": [
             ("O papel deve ser o mínimo possível, limitado à garantia da lei, da ordem e dos direitos de propriedade.", "Austríaca"),
             ("O governo deve atuar para criar e reformar instituições que corrijam falhas e promovam um sistema mais justo e eficiente.", "Institucionalista"),
@@ -226,8 +237,6 @@ if submitted:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
-
-
 
 
 
